@@ -3,7 +3,7 @@
     "readOnlyHint": true,
     "title": "Get discussion"
   },
-  "description": "Get a specific discussion by ID",
+  "description": "Get a specific discussion by ID. Does not return comments.",
   "inputSchema": {
     "properties": {
       "discussionNumber": {

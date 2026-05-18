@@ -282,7 +282,7 @@ func GetDiscussion(t translations.TranslationHelperFunc) inventory.ServerTool {
 		ToolsetMetadataDiscussions,
 		mcp.Tool{
 			Name:        "get_discussion",
-			Description: t("TOOL_GET_DISCUSSION_DESCRIPTION", "Get a specific discussion by ID"),
+			Description: t("TOOL_GET_DISCUSSION_DESCRIPTION", "Get a specific discussion by ID. Does not return comments."),
 			Annotations: &mcp.ToolAnnotations{
 				Title:        t("TOOL_GET_DISCUSSION_USER_TITLE", "Get discussion"),
 				ReadOnlyHint: true,
