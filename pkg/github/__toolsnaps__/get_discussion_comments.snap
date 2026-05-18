@@ -23,7 +23,7 @@
         "type": "string"
       },
       "perPage": {
-        "description": "Optional page size. Do not provide unless the user explicitly asks for a page size, limit, first N comments, or pagination.",
+        "description": "Results per page for pagination (min 1, max 100)",
         "maximum": 100,
         "minimum": 1,
         "type": "number"

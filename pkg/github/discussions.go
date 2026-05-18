@@ -384,30 +384,6 @@ Does not return comments, replies, or comment counts. Do not use this for reques
 }
 
 func GetDiscussionComments(t translations.TranslationHelperFunc) inventory.ServerTool {
-	schema := WithCursorPagination(&jsonschema.Schema{
-		Type: "object",
-		Properties: map[string]*jsonschema.Schema{
-			"owner": {
-				Type:        "string",
-				Description: "Repository owner or organization login. For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use ORG.",
-			},
-			"repo": {
-				Type:        "string",
-				Description: "Repository name. For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use .github.",
-			},
-			"discussionNumber": {
-				Type:        "number",
-				Description: "Discussion number from the URL path after /discussions/. This is not a node ID.",
-			},
-			"includeReplies": {
-				Type:        "boolean",
-				Description: "Optional. Set true only when the user explicitly asks to include replies. Set false when the user explicitly asks to exclude replies. Omit when replies are not mentioned.",
-			},
-		},
-		Required: []string{"owner", "repo", "discussionNumber"},
-	})
-	schema.Properties["perPage"].Description = "Optional page size. Do not provide unless the user explicitly asks for a page size, limit, first N comments, or pagination."
-
 	return NewTool(
 		ToolsetMetadataDiscussions,
 		mcp.Tool{
@@ -420,7 +396,28 @@ Do not call get_discussion first for comment-related requests; this tool is suff
 				Title:        t("TOOL_GET_DISCUSSION_COMMENTS_USER_TITLE", "Get discussion comments"),
 				ReadOnlyHint: true,
 			},
-			InputSchema: schema,
+			InputSchema: WithCursorPagination(&jsonschema.Schema{
+				Type: "object",
+				Properties: map[string]*jsonschema.Schema{
+					"owner": {
+						Type:        "string",
+						Description: "Repository owner or organization login. For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use ORG.",
+					},
+					"repo": {
+						Type:        "string",
+						Description: "Repository name. For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use .github.",
+					},
+					"discussionNumber": {
+						Type:        "number",
+						Description: "Discussion number from the URL path after /discussions/. This is not a node ID.",
+					},
+					"includeReplies": {
+						Type:        "boolean",
+						Description: "Optional. Set true only when the user explicitly asks to include replies. Set false when the user explicitly asks to exclude replies. Omit when replies are not mentioned.",
+					},
+				},
+				Required: []string{"owner", "repo", "discussionNumber"},
+			}),
 		},
 		[]scopes.Scope{scopes.Repo},
 		func(ctx context.Context, deps ToolDependencies, _ *mcp.CallToolRequest, args map[string]any) (*mcp.CallToolResult, any, error) {
