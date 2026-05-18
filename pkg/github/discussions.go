@@ -281,8 +281,10 @@ func GetDiscussion(t translations.TranslationHelperFunc) inventory.ServerTool {
 	return NewTool(
 		ToolsetMetadataDiscussions,
 		mcp.Tool{
-			Name:        "get_discussion",
-			Description: t("TOOL_GET_DISCUSSION_DESCRIPTION", "Get a specific discussion by ID. Does not return comments."),
+			Name: "get_discussion",
+			Description: t("TOOL_GET_DISCUSSION_DESCRIPTION", `Get a specific discussion by owner, repository, and discussion number.
+Returns discussion metadata such as title, body, URL, status, category, and timestamps.
+Does not return comments, replies, or comment counts. Do not use this for requests to read, list, summarize, count, or inspect discussion comments; use get_discussion_comments instead.`),
 			Annotations: &mcp.ToolAnnotations{
 				Title:        t("TOOL_GET_DISCUSSION_USER_TITLE", "Get discussion"),
 				ReadOnlyHint: true,
@@ -292,15 +294,15 @@ func GetDiscussion(t translations.TranslationHelperFunc) inventory.ServerTool {
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
 						Type:        "string",
-						Description: "Repository owner",
+						Description: "Repository owner or organization login. For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use ORG.",
 					},
 					"repo": {
 						Type:        "string",
-						Description: "Repository name",
+						Description: "Repository name. For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use .github.",
 					},
 					"discussionNumber": {
 						Type:        "number",
-						Description: "Discussion Number",
+						Description: "Discussion number from the URL path after /discussions/. This is not a node ID.",
 					},
 				},
 				Required: []string{"owner", "repo", "discussionNumber"},
@@ -382,37 +384,43 @@ func GetDiscussion(t translations.TranslationHelperFunc) inventory.ServerTool {
 }
 
 func GetDiscussionComments(t translations.TranslationHelperFunc) inventory.ServerTool {
+	schema := WithCursorPagination(&jsonschema.Schema{
+		Type: "object",
+		Properties: map[string]*jsonschema.Schema{
+			"owner": {
+				Type:        "string",
+				Description: "Repository owner or organization login. For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use ORG.",
+			},
+			"repo": {
+				Type:        "string",
+				Description: "Repository name. For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use .github.",
+			},
+			"discussionNumber": {
+				Type:        "number",
+				Description: "Discussion number from the URL path after /discussions/. This is not a node ID.",
+			},
+			"includeReplies": {
+				Type:        "boolean",
+				Description: "Optional. Set true only when the user explicitly asks to include replies. Set false when the user explicitly asks to exclude replies. Omit when replies are not mentioned.",
+			},
+		},
+		Required: []string{"owner", "repo", "discussionNumber"},
+	})
+	schema.Properties["perPage"].Description = "Optional page size. Do not provide unless the user explicitly asks for a page size, limit, first N comments, or pagination."
+
 	return NewTool(
 		ToolsetMetadataDiscussions,
 		mcp.Tool{
-			Name:        "get_discussion_comments",
-			Description: t("TOOL_GET_DISCUSSION_COMMENTS_DESCRIPTION", "Get comments from a discussion"),
+			Name: "get_discussion_comments",
+			Description: t("TOOL_GET_DISCUSSION_COMMENTS_DESCRIPTION", `Get/list comments for a specific discussion by owner, repository, and discussion number.
+Use this when the user asks to read, list, summarize, count, inspect, filter, or find what someone said in discussion comments.
+Returns top-level comments, pagination information, and totalCount. Can include replies only when includeReplies is explicitly requested.
+Do not call get_discussion first for comment-related requests; this tool is sufficient.`),
 			Annotations: &mcp.ToolAnnotations{
 				Title:        t("TOOL_GET_DISCUSSION_COMMENTS_USER_TITLE", "Get discussion comments"),
 				ReadOnlyHint: true,
 			},
-			InputSchema: WithCursorPagination(&jsonschema.Schema{
-				Type: "object",
-				Properties: map[string]*jsonschema.Schema{
-					"owner": {
-						Type:        "string",
-						Description: "Repository owner",
-					},
-					"repo": {
-						Type:        "string",
-						Description: "Repository name",
-					},
-					"discussionNumber": {
-						Type:        "number",
-						Description: "Discussion Number",
-					},
-					"includeReplies": {
-						Type:        "boolean",
-						Description: "When true, each top-level comment will include its replies nested within it (up to 100 replies per comment, which is the GitHub API maximum). Defaults to false.",
-					},
-				},
-				Required: []string{"owner", "repo", "discussionNumber"},
-			}),
+			InputSchema: schema,
 		},
 		[]scopes.Scope{scopes.Repo},
 		func(ctx context.Context, deps ToolDependencies, _ *mcp.CallToolRequest, args map[string]any) (*mcp.CallToolResult, any, error) {
@@ -590,8 +598,9 @@ func DiscussionCommentWrite(t translations.TranslationHelperFunc) inventory.Serv
 		ToolsetMetadataDiscussions,
 		mcp.Tool{
 			Name: "discussion_comment_write",
-			Description: t("TOOL_DISCUSSION_COMMENT_WRITE_DESCRIPTION", `Write operations for discussion comments.
-Supports adding top-level comments, replying to existing comments, updating comment content, deleting comments, and marking or unmarking comments as the answer.`),
+			Description: t("TOOL_DISCUSSION_COMMENT_WRITE_DESCRIPTION", `Write-only operations for discussion comments.
+Use only when the user explicitly asks to add a comment, reply, update, delete, mark as answer, or unmark as answer.
+Do not use this to read, list, get, summarize, count, search, or inspect discussion comments; use get_discussion_comments for read-only comment requests.`),
 			Annotations: &mcp.ToolAnnotations{
 				Title:           t("TOOL_DISCUSSION_COMMENT_WRITE_USER_TITLE", "Manage discussion comments"),
 				ReadOnlyHint:    false,
@@ -615,15 +624,15 @@ Options are:
 					},
 					"owner": {
 						Type:        "string",
-						Description: "Repository owner (required for 'add' and 'reply' methods)",
+						Description: "Repository owner or organization login (required for 'add' and 'reply' methods). For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use ORG.",
 					},
 					"repo": {
 						Type:        "string",
-						Description: "Repository name (required for 'add' and 'reply' methods)",
+						Description: "Repository name (required for 'add' and 'reply' methods). For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use .github.",
 					},
 					"discussionNumber": {
 						Type:        "number",
-						Description: "Discussion number (required for 'add' and 'reply' methods)",
+						Description: "Discussion number from the URL path after /discussions/ (required for 'add' and 'reply' methods). This is not a node ID.",
 					},
 					"body": {
 						Type:        "string",

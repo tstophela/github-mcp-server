@@ -3,7 +3,7 @@
     "readOnlyHint": true,
     "title": "Get discussion comments"
   },
-  "description": "Get comments from a discussion",
+  "description": "Get/list comments for a specific discussion by owner, repository, and discussion number.\nUse this when the user asks to read, list, summarize, count, inspect, filter, or find what someone said in discussion comments.\nReturns top-level comments, pagination information, and totalCount. Can include replies only when includeReplies is explicitly requested.\nDo not call get_discussion first for comment-related requests; this tool is sufficient.",
   "inputSchema": {
     "properties": {
       "after": {
@@ -11,25 +11,25 @@
         "type": "string"
       },
       "discussionNumber": {
-        "description": "Discussion Number",
+        "description": "Discussion number from the URL path after /discussions/. This is not a node ID.",
         "type": "number"
       },
       "includeReplies": {
-        "description": "When true, each top-level comment will include its replies nested within it (up to 100 replies per comment, which is the GitHub API maximum). Defaults to false.",
+        "description": "Optional. Set true only when the user explicitly asks to include replies. Set false when the user explicitly asks to exclude replies. Omit when replies are not mentioned.",
         "type": "boolean"
       },
       "owner": {
-        "description": "Repository owner",
+        "description": "Repository owner or organization login. For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use ORG.",
         "type": "string"
       },
       "perPage": {
-        "description": "Results per page for pagination (min 1, max 100)",
+        "description": "Optional page size. Do not provide unless the user explicitly asks for a page size, limit, first N comments, or pagination.",
         "maximum": 100,
         "minimum": 1,
         "type": "number"
       },
       "repo": {
-        "description": "Repository name",
+        "description": "Repository name. For org-level discussion URLs like https://github.com/orgs/ORG/discussions/NUMBER, use .github.",
         "type": "string"
       }
     },
