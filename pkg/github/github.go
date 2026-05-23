@@ -77,11 +77,25 @@ func IsNotFound(err error) bool {
 	return ok && ghErr.Response != nil && ghErr.Response.StatusCode == http.StatusNotFound
 }
 
+// IsUnauthorized returns true if the error is a GitHub 401 Unauthorized error.
+// This typically indicates an invalid or expired token.
+func IsUnauthorized(err error) bool {
+	if err == nil {
+		return false
+	}
+	ghErr, ok := err.(*github.ErrorResponse)
+	return ok && ghErr.Response != nil && ghErr.Response.StatusCode == http.StatusUnauthorized
+}
+
 // IsRateLimited returns true if the error is a GitHub rate limit error.
+// This covers both standard rate limits and secondary (abuse) rate limits.
 func IsRateLimited(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := err.(*github.RateLimitError)
+	if _, ok := err.(*github.RateLimitError); ok {
+		return true
+	}
+	_, ok := err.(*github.AbuseRateLimitError)
 	return ok
 }
