@@ -30,7 +30,8 @@ func WithToken(token string) ClientOption {
 
 // NewClient creates a new GitHub API client with the provided options.
 // If no token is provided via options, it falls back to the GITHUB_TOKEN
-// environment variable.
+// environment variable. Also checks GH_TOKEN as a secondary fallback,
+// which is the token name used by the GitHub CLI (gh).
 func NewClient(opts ...ClientOption) (*Client, error) {
 	c := &Client{}
 
@@ -39,12 +40,16 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	}
 
 	// Fall back to environment variable if no token was set via options.
+	// Check both GITHUB_TOKEN and GH_TOKEN (used by GitHub CLI).
 	if c.token == "" {
 		c.token = os.Getenv("GITHUB_TOKEN")
 	}
+	if c.token == "" {
+		c.token = os.Getenv("GH_TOKEN")
+	}
 
 	if c.token == "" {
-		return nil, fmt.Errorf("GitHub token is required: set GITHUB_TOKEN environment variable or provide a token")
+		return nil, fmt.Errorf("GitHub token is required: set GITHUB_TOKEN or GH_TOKEN environment variable or provide a token")
 	}
 
 	httpClient := oauth2TokenClient(context.Background(), c.token)
