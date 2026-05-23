@@ -64,10 +64,14 @@ func runServer(ctx context.Context, transport string, port int, logLevel string)
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	// Read GitHub token from environment
+	// Read GitHub token from environment.
+	// Also check GITHUB_PERSONAL_ACCESS_TOKEN as some tools set it under that name.
 	token := os.Getenv("GITHUB_TOKEN")
 	if token == "" {
 		token = os.Getenv("GH_TOKEN")
+	}
+	if token == "" {
+		token = os.Getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
 	}
 
 	cfg := server.Config{
