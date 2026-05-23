@@ -49,7 +49,8 @@ issue tracking, pull requests, and more.`,
 
 	cmd.Flags().StringVarP(&transport, "transport", "t", "stdio",
 		"Transport type: stdio or http")
-	cmd.Flags().IntVarP(&port, "port", "p", 8080,
+	// Changed default port from 8080 to 9090 to avoid conflicts with other local services
+	cmd.Flags().IntVarP(&port, "port", "p", 9090,
 		"Port to listen on (only used with http transport)")
 	// Changed default log level from "debug" to "info" to reduce noise in normal usage
 	cmd.Flags().StringVarP(&logLevel, "log-level", "l", "info",
