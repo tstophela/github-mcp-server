@@ -49,9 +49,9 @@ issue tracking, pull requests, and more.`,
 
 	cmd.Flags().StringVarP(&transport, "transport", "t", "stdio",
 		"Transport type: stdio or http")
-	cmd.Flags().IntVarP(&port, "port", "p", 3000,
+	cmd.Flags().IntVarP(&port, "port", "p", 8080,
 		"Port to listen on (only used with http transport)")
-	cmd.Flags().StringVarP(&logLevel, "log-level", "l", "info",
+	cmd.Flags().StringVarP(&logLevel, "log-level", "l", "debug",
 		"Log level: debug, info, warn, error")
 
 	return cmd
