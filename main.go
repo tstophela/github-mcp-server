@@ -77,6 +77,8 @@ func runServer(ctx context.Context, transport string, port int, logLevel string)
 	// Warn early if no token is found, since most API calls will fail without one.
 	if token == "" {
 		fmt.Fprintf(os.Stderr, "Warning: no GitHub token found in environment (GITHUB_TOKEN, GH_TOKEN, or GITHUB_PERSONAL_ACCESS_TOKEN)\n")
+		// Exit immediately rather than starting a server that can't do anything useful.
+		return fmt.Errorf("a GitHub token is required; set GITHUB_TOKEN, GH_TOKEN, or GITHUB_PERSONAL_ACCESS_TOKEN")
 	}
 
 	cfg := server.Config{
