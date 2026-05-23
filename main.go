@@ -74,6 +74,11 @@ func runServer(ctx context.Context, transport string, port int, logLevel string)
 		token = os.Getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
 	}
 
+	// Warn early if no token is found, since most API calls will fail without one.
+	if token == "" {
+		fmt.Fprintf(os.Stderr, "Warning: no GitHub token found in environment (GITHUB_TOKEN, GH_TOKEN, or GITHUB_PERSONAL_ACCESS_TOKEN)\n")
+	}
+
 	cfg := server.Config{
 		Transport: transport,
 		Port:      port,
